@@ -20,7 +20,7 @@ project(cfsd18-perception-detectcone)
 ################################################################################
 # Defining the relevant versions of OpenDLV Standard Message Set and libcluon.
 set(OPENDLV_STANDARD_MESSAGE_SET opendlv-standard-message-set-v0.9.1.odvd)
-set(CLUON_COMPLETE cluon-complete-build.hpp)
+set(CLUON_COMPLETE cluon-complete-v0.0.77.hpp)
 
 ################################################################################
 # This project requires C++14 or newer.
@@ -53,7 +53,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 # Threads are necessary for linking the resulting binaries as UDPReceiver is running in parallel.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-
 ################################################################################
 # Extract cluon-msc from cluon-complete.hpp.
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/cluon-msc
@@ -79,20 +78,15 @@ include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 # Gather all object code first to avoid double compilation. This needs to be done for all added objects, can become very long? Why is this object and not static which works
 
 ################################################################################
-# Including g2o in /usr/include
-include_directories(SYSTEM /usr/include)
-include_directories(SYSTEM /usr/local/include)
-link_directories(SYSTEM /usr/lib) #Access g2o
-link_directories(SYSTEM /usr/local/lib) #Access g2o
-
-################################################################################
 # OpenCV
+#set(CMAKE_PREFIX_PATH "/usr/local/opt/opencv3/share/OpenCV")
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+
 ################################################################################
 # Eigen
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
 include_directories(${Eigen3_INCLUDE_DIRS})
 
 ###############################################################################
@@ -112,20 +106,29 @@ find_package(TinyDNN REQUIRED)
 
 ###############################################################################
 #TBB
-find_package(TBB REQUIRED)
-include_directories(${TBB_INCLUDE_DIRS})
-add_definitions(${TBB_DEFINITIONS})
+#find_package(TBB REQUIRED)
+#include_directories(${TBB_INCLUDE_DIRS})
+#add_definitions(${TBB_DEFINITIONS})
 
+SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+
+find_package(LibRT REQUIRED)
+set(LIBRARIES ${LIBRARIES} ${LIBRT_LIBRARIES})
+include_directories(SYSTEM ${LIBRT_INCLUDE_DIR})
 ################################################################################
 # Link libs
-set(LIBRARIES Threads::Threads)
+#set(LIBRARIES Threads::Threads opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d rt)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_library(${PROJECT_NAME}-core STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/detectcone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/cone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/point.cpp ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
 # Add custom libs here
-set(LIBRARIES Threads::Threads ${OpenCV_LIBS} ${Eigen3_LIBS} ${TinyDNN_LIBS} ${TBB_LIBRARIES})
+set(LIBRARIES ${LIBRARIES} Threads::Threads ${OpenCV_LIBS} ${Eigen3_LIBS} ${TinyDNN_LIBS}) 
+
+MESSAGE(STATUS "heej")
+MESSAGE(STATUS ${LIBRARIES})
+#${TBB_LIBRARIES}
 
 ################################################################################
 # Create executable.

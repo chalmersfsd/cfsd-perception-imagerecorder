@@ -54,6 +54,7 @@ class DetectCone {
   DetectCone &operator=(DetectCone const &) = delete;
   ~DetectCone();
   void nextContainer(cluon::data::Envelope data);
+  void forwardDetectionORB(cv::Mat);
 
  private:
   void setUp(std::map<std::string, std::string> commandlineArguments); 
@@ -69,7 +70,6 @@ class DetectCone {
   void gather_points(cv::Mat, std::vector<float>, std::vector<int>&, std::vector<float>&);
   void filterKeypoints(std::vector<cv::Point3f>&);
   void xyz2xy(cv::Mat, cv::Point3f, cv::Point2f&, int&);
-  void forwardDetectionORB(cv::Mat);
   void backwardDetection(cv::Mat, std::vector<cv::Point3f>, std::vector<int>&);
 
   Eigen::MatrixXd Spherical2Cartesian(double, double, double);

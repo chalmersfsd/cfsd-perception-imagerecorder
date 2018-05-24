@@ -82,13 +82,13 @@ int32_t main(int32_t argc, char **argv) {
             size.width = WIDTH;
             size.height = HEIGHT;
 
-            cv::IplImage *image = cv::cvCreateImageHeader(size, IPL_DEPTH_8U, BPP/8);
+            IplImage *image = cvCreateImageHeader(size, IPL_DEPTH_8U, BPP/8);
             sharedMemory->lock();
             image->imageData = sharedMemory->data();
             image->imageDataOrigin = image->imageData;
             sharedMemory->unlock();
-            size_t lastMapPoint = 0;
-            uint32_t lastSentIndex = 0;
+            //size_t lastMapPoint = 0;
+            //uint32_t lastSentIndex = 0;
             while (od4.isRunning()) {
                 // The shared memory uses a pthread broadcast to notify us; just sleep to get awaken up.
                 
@@ -105,7 +105,7 @@ int32_t main(int32_t argc, char **argv) {
                 frameCounter++;
             }
 
-            cv::cvReleaseImageHeader(&image);
+            cvReleaseImageHeader(&image);
         }
         else {
             std::cerr << argv[0] << ": Failed to access shared memory '" << NAME << "'." << std::endl;
