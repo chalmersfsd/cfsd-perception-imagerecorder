@@ -24,10 +24,10 @@
 
 class Pt{
   public:
-    Pt(cv::Point2f m_pt, int m_group);
+    Pt(cv::Point3f m_pt, int m_group);
     ~Pt() = default;
 
-    cv::Point2f pt;
+    cv::Point3f pt;
     int group;
 };
 

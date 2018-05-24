@@ -79,13 +79,6 @@ include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 # Gather all object code first to avoid double compilation. This needs to be done for all added objects, can become very long? Why is this object and not static which works
 
 ################################################################################
-# Including g2o in /usr/include
-include_directories(SYSTEM /usr/include)
-include_directories(SYSTEM /usr/local/include)
-link_directories(SYSTEM /usr/lib) #Access g2o
-link_directories(SYSTEM /usr/local/lib) #Access g2o
-
-################################################################################
 # OpenCV
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})

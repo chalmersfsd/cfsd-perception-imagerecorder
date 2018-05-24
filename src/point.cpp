@@ -20,7 +20,7 @@
 #include "point.hpp"
 
 
-Pt::Pt(cv::Point2f m_pt, int m_group):
+Pt::Pt(cv::Point3f m_pt, int m_group):
   pt()
 , group()
 {

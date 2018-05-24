@@ -335,36 +335,25 @@ void DetectCone::gather_points(//初始化
 
 void DetectCone::filterKeypoints(std::vector<cv::Point3f>& point3Ds){
   std::vector<Pt> data;
-  std::vector<cv::Point2f> data_tmp;
   
   for(size_t i = 0; i < point3Ds.size(); i++){
-    if(point3Ds[i].y > 0.5 && point3Ds[i].y < 2){
-      cv::Point2d pt(point3Ds[i].x, point3Ds[i].z);
-      data_tmp.push_back(pt);
-      data.push_back(Pt(pt,-1));
-    }
+    // if(point3Ds[i].y > 0.5 && point3Ds[i].y < 2){
+      data.push_back(Pt{point3Ds[i],-1});
+    // }
   }
-  point3Ds.clear();
-
-  if(data.size() == 0)
-    return;
-
-  cv::Mat source = cv::Mat(data_tmp).reshape(1);
- 
-  int resultSize = 1000;
-  float resultResize = 50;
-  cv::RNG rng(time(0));
-  cv::Mat result = cv::Mat::zeros(resultSize, resultSize, CV_8UC3);
-  cv::Point2f point2D;
-  int groupId = 0;
   
+  cv::Mat source = cv::Mat(point3Ds).reshape(1);
+  point3Ds.clear();
+  cv::Point3f point3D;
+  int groupId = 0;
 
   for(size_t j = 0; j < data.size()-1; j++)
   {   
     if(data[j].group == -1){
-      std::vector<float> vecQuery;//存放 查询点 的容器（本例都是vector类型）
-      vecQuery.push_back(data[j].pt.x);
-      vecQuery.push_back(data[j].pt.y);
+      std::vector<float> vecQuery(3);//存放 查询点 的容器（本例都是vector类型）
+      vecQuery[0] = data[j].pt.x;
+      vecQuery[1] = data[j].pt.y;
+      vecQuery[2] = data[j].pt.z;
       std::vector<int> vecIndex;
       std::vector<float> vecDist;
 
@@ -382,7 +371,7 @@ void DetectCone::filterKeypoints(std::vector<cv::Point3f>& point3Ds){
       if (num == 0){
         if (data[j].group == -1){ 
           data[j].group = groupId++;
-          point2D = data[j].pt;
+          point3D = data[j].pt;
           // std::cout<<j<<" type 1"<<" "<<data[j].pt.x<<","<<data[j].pt.y<<" group "<<data[j].group<<std::endl;
         }
       }
@@ -391,6 +380,7 @@ void DetectCone::filterKeypoints(std::vector<cv::Point3f>& point3Ds){
         std::vector<int> filteredIndex;
         std::vector<float> centerPointX;
         std::vector<float> centerPointY;
+        std::vector<float> centerPointZ;
         for (int v = 0; v < num; v++){
           groupAll.push_back(data[vecIndex[v]]);
           filteredIndex.push_back(vecIndex[v]);
@@ -410,28 +400,23 @@ void DetectCone::filterKeypoints(std::vector<cv::Point3f>& point3Ds){
               data[filteredIndex[k]].group = groupId;
               centerPointX.push_back(data[vecIndex[k]].pt.x);
               centerPointY.push_back(data[vecIndex[k]].pt.y);
-
-              int X1 = int(data[filteredIndex[k]].pt.x*resultResize+resultSize/2);
-              int Y1 = int(data[filteredIndex[k]].pt.y*resultResize);
-              // std::cout<<k<<" type 2"<<" "<<data[vecIndex[k]].pt.x<<","<<data[vecIndex[k]].pt.y<<" group "<< data[vecIndex[k]].group<<std::endl;
-              cv::circle(result, cv::Point(X1,Y1), 5, cv::Scalar(rng.uniform(0,255),rng.uniform(0,255),rng.uniform(0,255)), -1);
+              centerPointZ.push_back(data[vecIndex[k]].pt.z);
             }
           }
           groupId++;
-          point2D.x = mean(centerPointX);
-          point2D.y = mean(centerPointY);
+          point3D.x = mean(centerPointX);
+          point3D.y = mean(centerPointY);
+          point3D.z = mean(centerPointZ);
         }
         else{
           data[j].group = data[vecIndex[0]].group;
-          point2D = data[j].pt;
+          point3D = data[j].pt;
           // std::cout<<j<<" type 2"<<" "<<data[j].pt.x<<","<<data[j].pt.y<<" group "<<data[j].group<<std::endl;
         }
       }
-      point3Ds.push_back(cv::Point3f(point2D.x, 1, point2D.y));
-
-      int X1 = int(point2D.x*resultResize+resultSize/2);
-      int Y1 = int(point2D.y*resultResize);
-      cv::circle(result, cv::Point(X1,Y1), 8, cv::Scalar(0, 255, 255), -1);
+      if(std::isnan(point3D.x)||std::isnan(point3D.y)||std::isnan(point3D.y))
+        continue;
+      point3Ds.push_back(point3D);
     }
   }
 
@@ -466,7 +451,7 @@ void DetectCone::xyz2xy(cv::Mat Q, cv::Point3f xyz, cv::Point2f& xy, int& radius
 
 void DetectCone::forwardDetectionORB(cv::Mat img){
   //Given RoI by SIFT detector and detected by CNN
-  double threshold = 0.1;
+  double threshold = 0.9;
 
   std::vector<tiny_dnn::tensor_t> inputs;
   std::vector<int> verifiedIndex;
@@ -477,27 +462,14 @@ void DetectCone::forwardDetectionORB(cv::Mat img){
   reconstruction(img, Q, disp, img, XYZ);
   img.copyTo(imgSource);
 
-  // int rowT = 160;
-  // int rowB = 290;
   int rowT = 190;
-  int rowB = 320;
-  // int rowT = 180;
-  // int rowB = 376;
+  int rowB = 376;//320;
   imgRoI = img.rowRange(rowT, rowB);
 
-  cv::Ptr<cv::ORB> detector = cv::ORB::create();
+  cv::Ptr<cv::ORB> detector = cv::ORB::create(20);
   std::vector<cv::KeyPoint> keypoints;
   detector->detect(imgRoI, keypoints);
 
-  // cv::Mat Match;
-  // cv::drawKeypoints(gray, keypoints, Match);
-  // cv::namedWindow("Match", cv::WINDOW_NORMAL);
-  // cv::imshow("Match", Match);
-  // cv::waitKey(0);
-
-  // cv::resize(img, img, cv::Size(m_width/2, m_height/2));
-  // cv::Mat probMap = cv::Mat::zeros(m_height/2, m_width/2, CV_64F);
-  // cv::Mat indexMap = cv::Mat::zeros(m_height/2, m_width/2, CV_32S);
   cv::Mat probMap = cv::Mat::zeros(m_height, m_width, CV_64F);
   cv::Mat indexMap = cv::Mat::zeros(m_height, m_width, CV_32S);
 
@@ -506,7 +478,7 @@ void DetectCone::forwardDetectionORB(cv::Mat img){
   for(size_t i = 0; i < keypoints.size(); i++){
     cv::Point position(int(keypoints[i].pt.x), int(keypoints[i].pt.y)+rowT);
     cv::Point3f point3D = XYZ.at<cv::Point3f>(position);
-    if(point3D.y>0.8 && point3D.y<1.1){
+    if(1){
       point3Ds.push_back(point3D);
     }
     // std::cout << cv::Point3f(XYZ.at<cv::Point3f>(position)) << std::endl;
@@ -536,9 +508,9 @@ void DetectCone::forwardDetectionORB(cv::Mat img){
     // cv::waitKey(0);
     //cv::destroyAllWindows();
 
-    if (0 > roi.x || 0 > roi.width || roi.x + roi.width > img.cols || 0 > roi.y || 0 > roi.height || roi.y + roi.height > img.rows){
+    if (0 > roi.x || 0 >= roi.width || roi.x + roi.width > img.cols || 0 > roi.y || 0 >= roi.height || roi.y + roi.height > img.rows){
       std::cout << "Wrong roi!" << std::endl;
-      // outputs.push_back(-1);
+      continue;
     }
     else{
       auto patchImg = img(roi);
@@ -601,13 +573,13 @@ void DetectCone::forwardDetectionORB(cv::Mat img){
         } 
         else{
           if (labelName == "blue")
-            cv::circle(img, position, radius, cv::Scalar (175,238,238));
+            cv::circle(img, position, radius, cv::Scalar (255,0,0), 2);
           else if (labelName == "yellow")
-            cv::circle(img, position, radius, cv::Scalar (0,255,255));
+            cv::circle(img, position, radius, cv::Scalar (0,255,255), 2);
           else if (labelName == "orange")
-            cv::circle(img, position, radius, cv::Scalar (0,165,255));
+            cv::circle(img, position, radius, cv::Scalar (0,165,255), 2);
           else if (labelName == "big orange")
-            cv::circle(img, position, radius, cv::Scalar (0,0,255));
+            cv::circle(img, position, radius, cv::Scalar (0,0,255), 2);
 
           int xt = int(point3D.x * float(resultResize) + resultm_width/2);
           int yt = int(point3D.z * float(resultResize));
@@ -707,7 +679,7 @@ void DetectCone::forwardDetectionORB(cv::Mat img){
   // }
 
   // cv::circle(result[0], cv::Point (int(resultm_width/2),0), 5, cv::Scalar (0, 0, 255), -1);
-  cv::flip(result, result, 0);
+  // cv::flip(result, result, 0);
   // img.copyTo(result[1].rowRange(resultm_height-376,resultm_height));
   // cv::hconcat(result[1], result[0], coResult);
 
@@ -726,15 +698,11 @@ void DetectCone::forwardDetectionORB(cv::Mat img){
   // cv::imwrite(savePath, disp);
 
   cv::namedWindow("img", cv::WINDOW_NORMAL);
-  cv::setWindowProperty("img", cv::WND_PROP_FULLSCREEN , cv::WINDOW_FULLSCREEN ); 
+  // cv::setWindowProperty("img", cv::WND_PROP_FULLSCREEN , cv::WINDOW_FULLSCREEN ); 
   cv::imshow("img", img);
   // cv::namedWindow("disp", cv::WINDOW_NORMAL);
   // cv::imshow("disp", disp);
-  cv::waitKey(30);
-  // cv::destroyAllWindows();
-
-  // for(size_t i = 0; i < pts.size(); i++)
-  //   std::cout << i << ": " << outputs[i] << std::endl;
+  cv::waitKey(10);
 }
 
 // void DetectCone::backwardDetection(cv::Mat img, std::vector<cv::Point3f> pts, std::vector<int>& outputs){
