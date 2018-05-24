@@ -24,8 +24,6 @@ RUN apk update && \
         #bash \
         g++ \
         make \
-        gdb \
-        valgrind \
         upx \
         git \
         mercurial \

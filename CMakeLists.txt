@@ -117,14 +117,14 @@ set(LIBRARIES ${LIBRARIES} ${LIBRT_LIBRARIES})
 include_directories(SYSTEM ${LIBRT_INCLUDE_DIR})
 ################################################################################
 # Link libs
-#set(LIBRARIES Threads::Threads opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d rt)
+#set(LIBRARIES Threads::Threads opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d rt libgio-2.0)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_library(${PROJECT_NAME}-core STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/detectcone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/cone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/point.cpp ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
-# Add custom libs here
-set(LIBRARIES ${LIBRARIES} Threads::Threads ${OpenCV_LIBS} ${Eigen3_LIBS} ${TinyDNN_LIBS}) 
+# Add custom libs h
+set(LIBRARIES ${LIBRARIES} Threads::Threads ${OpenCV_LIBS} ${Eigen3_LIBS} ${TinyDNN_LIBS} rt) 
 
 MESSAGE(STATUS "heej")
 MESSAGE(STATUS ${LIBRARIES})

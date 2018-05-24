@@ -33,7 +33,7 @@ services:
         image: "detectcone:detectconev0.0.1"
         network_mode: "host"
         ipc: host
-        command: "cfsd18-perception-detectcone --cid=${CID} --verbose --id=1 --threshold=1.5 --timeDiffMilliseconds=20 --checkLidarMilliseconds=1000 --senderStamp=118 --attentionSenderStamp=116"
+        command: "cfsd18-perception-detectcone --cid=121 --verbose --id=1 --threshold=1.5 --timeDiffMilliseconds=20 --checkLidarMilliseconds=1000 --senderStamp=118 --attentionSenderStamp=116"
 
     opendlv-device-camera-opencv:
         image: producer:latest
@@ -55,4 +55,4 @@ services:
           memlock:
             soft: 5600000
             hard: 5600000
-        command: "/usr/bin/opendlv-device-camera-opencv --camera=/dev/video1 --cid=121 --name=camera0 --width=2560 --height=720 --bpp=24 --freq=30 --verbose=1"
+        command: "/usr/bin/opendlv-device-camera-opencv --camera=/dev/video1 --cid=121 --name=cam0 --width=2560 --height=720 --bpp=24 --freq=30 --verbose=1"
