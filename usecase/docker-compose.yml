@@ -50,6 +50,8 @@ services:
             - "/dev/shm:/dev/shm"
         ulimits:
           memlock:
-            soft: 44236800
-            hard: 44236800
-        command: "opendlv-device-camera-opencv --name=camera1 --bgr2rgb --cid=111 --camera=/dev/video1 --width=2560 --height=720 --bpp=24 --freq=15 --verbose"
+            soft: 1516032
+            hard: 1516032
+        command: "opendlv-device-camera-opencv --name=camera1 --bgr2rgb --cid=111 --camera=/dev/video1 --width=1344 --height=376 --bpp=24 --freq=15 --verbose"
+
+    
