@@ -69,7 +69,7 @@ class DetectCone {
   void gather_points(cv::Mat, std::vector<float>, std::vector<int>&, std::vector<float>&);
   void filterKeypoints(std::vector<cv::Point3f>&);
   void xyz2xy(cv::Mat, cv::Point3f, cv::Point2f&, int&);
-  void forwardDetectionRoI(cv::Mat);
+  void forwardDetectionORB(cv::Mat);
   void backwardDetection(cv::Mat, std::vector<cv::Point3f>, std::vector<int>&);
 
   Eigen::MatrixXd Spherical2Cartesian(double, double, double);

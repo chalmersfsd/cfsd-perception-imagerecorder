@@ -449,309 +449,297 @@ void DetectCone::filterKeypoints(std::vector<cv::Point3f>& point3Ds){
   // cv::waitKey(0);
 }
 
-// void DetectCone::xyz2xy(cv::Mat Q, cv::Point3f xyz, cv::Point2f& xy, int& radius){
-//   double X = xyz.x;
-//   double Y = xyz.y;
-//   double Z = xyz.z;
-//   double Cx = -Q.at<double>(0,3);
-//   double Cy = -Q.at<double>(1,3);
-//   double f = Q.at<double>(2,3);
-//   double a = Q.at<double>(3,2);
-//   double b = Q.at<double>(3,3);
-//   double d = (f - Z * b ) / ( Z * a);
-//   xy.x = X * ( d * a + b ) + Cx;
-//   xy.y = Y * ( d * a + b ) + Cy;
-//   radius = int(0.4 * ( d * a + b ));
-// }
+void DetectCone::xyz2xy(cv::Mat Q, cv::Point3f xyz, cv::Point2f& xy, int& radius){
+  float X = xyz.x;
+  float Y = xyz.y;
+  float Z = xyz.z;
+  float Cx = -Q.at<float>(0,3);
+  float Cy = -Q.at<float>(1,3);
+  float f = Q.at<float>(2,3);
+  float a = Q.at<float>(3,2);
+  float b = Q.at<float>(3,3);
+  float d = (f - Z * b ) / ( Z * a);
+  xy.x = X * ( d * a + b ) + Cx;
+  xy.y = Y * ( d * a + b ) + Cy;
+  radius = int(0.4 * ( d * a + b ));
+}
 
-// void DetectCone::forwardDetectionORB(cv::Mat img){
-//   //Given RoI by SIFT detector and detected by CNN
-//   double threshold = 0.1;
+void DetectCone::forwardDetectionORB(cv::Mat img){
+  //Given RoI by SIFT detector and detected by CNN
+  double threshold = 0.1;
 
-//   std::vector<tiny_dnn::tensor_t> inputs;
-//   std::vector<int> verifiedIndex;
-//   std::vector<cv::Point> candidates;
-//   // std::vector<int> outputs;
+  std::vector<tiny_dnn::tensor_t> inputs;
+  std::vector<int> verifiedIndex;
+  std::vector<cv::Point> candidates;
+  // std::vector<int> outputs;
 
-//   cv::Mat Q, disp, XYZ, imgRoI, imgSource;
-//   reconstruction(img, Q, disp, img, XYZ);
-//   img.copyTo(imgSource);
+  cv::Mat Q, disp, XYZ, imgRoI, imgSource;
+  reconstruction(img, Q, disp, img, XYZ);
+  img.copyTo(imgSource);
 
-//   // int rowT = 160;
-//   // int rowB = 290;
-//   int rowT = 190;
-//   int rowB = 320;
-//   // int rowT = 180;
-//   // int rowB = 376;
-//   imgRoI = img.rowRange(rowT, rowB);
+  // int rowT = 160;
+  // int rowB = 290;
+  int rowT = 190;
+  int rowB = 320;
+  // int rowT = 180;
+  // int rowB = 376;
+  imgRoI = img.rowRange(rowT, rowB);
 
-//   cv::Ptr<cv::ORB> detector = cv::ORB::create();
-//   std::vector<cv::KeyPoint> keypoints;
-//   detector->detect(imgRoI, keypoints);
+  cv::Ptr<cv::ORB> detector = cv::ORB::create();
+  std::vector<cv::KeyPoint> keypoints;
+  detector->detect(imgRoI, keypoints);
 
-//   // cv::Mat Match;
-//   // cv::drawKeypoints(gray, keypoints, Match);
-//   // cv::namedWindow("Match", cv::WINDOW_NORMAL);
-//   // cv::imshow("Match", Match);
-//   // cv::waitKey(0);
+  // cv::Mat Match;
+  // cv::drawKeypoints(gray, keypoints, Match);
+  // cv::namedWindow("Match", cv::WINDOW_NORMAL);
+  // cv::imshow("Match", Match);
+  // cv::waitKey(0);
 
-//   // cv::resize(img, img, cv::Size(m_width/2, m_height/2));
-//   // cv::Mat probMap = cv::Mat::zeros(m_height/2, m_width/2, CV_64F);
-//   // cv::Mat indexMap = cv::Mat::zeros(m_height/2, m_width/2, CV_32S);
-//   cv::Mat probMap = cv::Mat::zeros(m_height, m_width, CV_64F);
-//   cv::Mat indexMap = cv::Mat::zeros(m_height, m_width, CV_32S);
+  // cv::resize(img, img, cv::Size(m_width/2, m_height/2));
+  // cv::Mat probMap = cv::Mat::zeros(m_height/2, m_width/2, CV_64F);
+  // cv::Mat indexMap = cv::Mat::zeros(m_height/2, m_width/2, CV_32S);
+  cv::Mat probMap = cv::Mat::zeros(m_height, m_width, CV_64F);
+  cv::Mat indexMap = cv::Mat::zeros(m_height, m_width, CV_32S);
 
-//   std::vector<cv::Point3f> point3Ds;
-//   cv::Point2f point2D;
-//   for(size_t i = 0; i < keypoints.size(); i++){
-//     cv::Point position(keypoints[i].pt.x, keypoints[i].pt.y+rowT);
-//     cv::Point3f point3D = XYZ.at<cv::Point3f>(position);
-//     if(point3D.y>0.8 && point3D.y<1.1){
-//       point3Ds.push_back(point3D);
-//     }
-//     // std::cout << cv::Point3f(XYZ.at<cv::Point3f>(position)) << std::endl;
-//   }
-//   filterKeypoints(point3Ds);
-//   for(size_t i = 0; i < point3Ds.size(); i++){
-//     int radius;
-//     xyz2xy(Q, point3Ds[i], point2D, radius);
-//     int x = point2D.x;
-//     int y = point2D.y;
+  std::vector<cv::Point3f> point3Ds;
+  cv::Point2f point2D;
+  for(size_t i = 0; i < keypoints.size(); i++){
+    cv::Point position(int(keypoints[i].pt.x), int(keypoints[i].pt.y)+rowT);
+    cv::Point3f point3D = XYZ.at<cv::Point3f>(position);
+    if(point3D.y>0.8 && point3D.y<1.1){
+      point3Ds.push_back(point3D);
+    }
+    // std::cout << cv::Point3f(XYZ.at<cv::Point3f>(position)) << std::endl;
+  }
+  filterKeypoints(point3Ds);
+  for(size_t i = 0; i < point3Ds.size(); i++){
+    int radius;
+    xyz2xy(Q, point3Ds[i], point2D, radius);
+    int x = int(point2D.x);
+    int y = int(point2D.y);
 
-//     // float_t ratio = depth2resizeRate(point3Ds[i].x, point3Ds[i].z);
-//     // int length = ratio * 25;
-//     // int radius = (length-1)/2;
-//     // radius = 12;
+    // float_t ratio = depth2resizeRate(point3Ds[i].x, point3Ds[i].z);
+    // int length = ratio * 25;
+    // int radius = (length-1)/2;
+    // radius = 12;
 
-//     cv::Rect roi;
-//     roi.x = std::max(x - radius, 0);
-//     roi.y = std::max(y - radius, 0);
-//     roi.m_width = std::min(x + radius, img.cols) - roi.x;
-//     roi.m_height = std::min(y + radius, img.rows) - roi.y;
+    cv::Rect roi;
+    roi.x = std::max(x - radius, 0);
+    roi.y = std::max(y - radius, 0);
+    roi.width = std::min(x + radius, img.cols) - roi.x;
+    roi.height = std::min(y + radius, img.rows) - roi.y;
 
-//     //cv::circle(img, cv::Point (x,y), radius, cv::Scalar (0,0,0));
-//     // // cv::circle(disp, cv::Point (x,y), 3, 0, CV_FILLED);
-//     // cv::namedWindow("roi", cv::WINDOW_NORMAL);
-//     // cv::imshow("roi", img_hsv);
-//     // cv::waitKey(0);
-//     //cv::destroyAllWindows();
+    //cv::circle(img, cv::Point (x,y), radius, cv::Scalar (0,0,0));
+    // // cv::circle(disp, cv::Point (x,y), 3, 0, CV_FILLED);
+    // cv::namedWindow("roi", cv::WINDOW_NORMAL);
+    // cv::imshow("roi", img_hsv);
+    // cv::waitKey(0);
+    //cv::destroyAllWindows();
 
-//     if (0 > roi.x || 0 > roi.m_width || roi.x + roi.m_width > img.cols || 0 > roi.y || 0 > roi.m_height || roi.y + roi.m_height > img.rows){
-//       std::cout << "Wrong roi!" << std::endl;
-//       // outputs.push_back(-1);
-//     }
-//     else{
-//       auto patchImg = img(roi);
-//       // cv::namedWindow("roi", cv::WINDOW_NORMAL);
-//       // cv::imshow("roi", patchImg);
-//       // cv::waitKey(0);
-//       tiny_dnn::vec_t data;
-//       convertImage(patchImg, m_patchSize, m_patchSize, data);
-//       inputs.push_back({data});
-//       // outputs.push_back(0);
-//       verifiedIndex.push_back(i);
-//       candidates.push_back(cv::Point(x,y));
-//     }
-//   }
-  
-//   int index, index2;
-//   std::string filename, savePath;
-//   index = imgPath.find_last_of('/');
-//   filename = imgPath.substr(index+1);
-//   index2 = filename.find_last_of('.');
-//   std::ofstream savefile;
-//   savePath = imgPath.substr(0,index-7)+"/results/"+filename.substr(0,index2)+".csv";
-//   savefile.open(savePath);
+    if (0 > roi.x || 0 > roi.width || roi.x + roi.width > img.cols || 0 > roi.y || 0 > roi.height || roi.y + roi.height > img.rows){
+      std::cout << "Wrong roi!" << std::endl;
+      // outputs.push_back(-1);
+    }
+    else{
+      auto patchImg = img(roi);
+      // cv::namedWindow("roi", cv::WINDOW_NORMAL);
+      // cv::imshow("roi", patchImg);
+      // cv::waitKey(0);
+      tiny_dnn::vec_t data;
+      convertImage(patchImg, m_patchSize, m_patchSize, data);
+      inputs.push_back({data});
+      // outputs.push_back(0);
+      verifiedIndex.push_back(i);
+      candidates.push_back(cv::Point(x,y));
+    }
+  }
 
-//   int resultm_width = m_height;
-//   int resultm_height = m_height;
-//   double resultResize = 20;
-//   cv::Mat result = cv::Mat::zeros(resultm_height, resultm_width, CV_8UC3);
-//   std::string labels[] = {"background", "blue", "yellow", "orange", "big orange"};
+  int resultm_width = m_height;
+  int resultm_height = m_height;
+  double resultResize = 20;
+  cv::Mat result = cv::Mat::zeros(resultm_height, resultm_width, CV_8UC3);
+  std::string labels[] = {"background", "blue", "yellow", "orange", "big orange"};
 
-//   if(inputs.size()>0){
-//     auto prob = m_slidingWindow.predict(inputs);
-//     for(size_t i = 0; i < inputs.size(); i++){
-//       size_t maxIndex = 0;
-//       double maxProb = prob[i][0][0];
-//       for(size_t j = 1; j < 5; j++){
-//         if(prob[i][0][j] > maxProb){
-//           maxIndex = j;
-//           maxProb = prob[i][0][j];
-//         }
-//       }
-//       // outputs[verifiedIndex[i]] = maxIndex;
-//       int x = candidates[i].x;
-//       int y = candidates[i].y;
-//       probMap.at<double>(y,x) = maxProb;
-//       indexMap.at<int>(y,x) = maxIndex;
-//     }
-//     std::vector <cv::Point> cones = imRegionalMax(probMap, 10, threshold, 10);
+  if(inputs.size()>0){
+    auto prob = m_slidingWindow.predict(inputs);
+    for(size_t i = 0; i < inputs.size(); i++){
+      size_t maxIndex = 0;
+      double maxProb = prob[i][0][0];
+      for(size_t j = 1; j < 5; j++){
+        if(prob[i][0][j] > maxProb){
+          maxIndex = j;
+          maxProb = prob[i][0][j];
+        }
+      }
+      // outputs[verifiedIndex[i]] = maxIndex;
+      int x = candidates[i].x;
+      int y = candidates[i].y;
+      probMap.at<double>(y,x) = maxProb;
+      indexMap.at<int>(y,x) = maxIndex;
+    }
+    std::vector <cv::Point> cones = imRegionalMax(probMap, 10, threshold, 10);
 
-//     for(size_t i = 0; i < cones.size(); i++){
-//       int x = cones[i].x;
-//       int y = cones[i].y;
-//       double maxProb = probMap.at<double>(y,x);
-//       int maxIndex = indexMap.at<int>(y,x);
-//       cv::Point position(x, y);
-//       cv::Point3f point3D = XYZ.at<cv::Point3f>(position);
-//       std::string labelName = labels[maxIndex];
-//       // float_t ratio = depth2resizeRate(point3D.x, point3D.z);
-//       // int length = ratio * 25;
-//       // int radius = (length-1)/2;
-//       int radius;
-//       cv::Point2f position_tmp;
-//       xyz2xy(Q, point3D, position_tmp, radius);
+    for(size_t i = 0; i < cones.size(); i++){
+      int x = cones[i].x;
+      int y = cones[i].y;
+      double maxProb = probMap.at<double>(y,x);
+      int maxIndex = indexMap.at<int>(y,x);
+      cv::Point position(x, y);
+      cv::Point3f point3D = XYZ.at<cv::Point3f>(position);
+      std::string labelName = labels[maxIndex];
+      // float_t ratio = depth2resizeRate(point3D.x, point3D.z);
+      // int length = ratio * 25;
+      // int radius = (length-1)/2;
+      int radius;
+      cv::Point2f position_tmp;
+      xyz2xy(Q, point3D, position_tmp, radius);
 
-//       if(radius>0){
-//         if (labelName == "background"){
-//           std::cout << "No cone detected" << std::endl;
-//           cv::circle(img, position, radius, cv::Scalar (0,0,0));
-//         } 
-//         else{
-//           if (labelName == "blue")
-//             cv::circle(img, position, radius, cv::Scalar (175,238,238));
-//           else if (labelName == "yellow")
-//             cv::circle(img, position, radius, cv::Scalar (0,255,255));
-//           else if (labelName == "orange")
-//             cv::circle(img, position, radius, cv::Scalar (0,165,255));
-//           else if (labelName == "big orange")
-//             cv::circle(img, position, radius, cv::Scalar (0,0,255));
+      if(radius>0){
+        if (labelName == "background"){
+          std::cout << "No cone detected" << std::endl;
+          cv::circle(img, position, radius, cv::Scalar (0,0,0));
+        } 
+        else{
+          if (labelName == "blue")
+            cv::circle(img, position, radius, cv::Scalar (175,238,238));
+          else if (labelName == "yellow")
+            cv::circle(img, position, radius, cv::Scalar (0,255,255));
+          else if (labelName == "orange")
+            cv::circle(img, position, radius, cv::Scalar (0,165,255));
+          else if (labelName == "big orange")
+            cv::circle(img, position, radius, cv::Scalar (0,0,255));
 
-//           int xt = int(point3D.x * float(resultResize) + resultm_width/2);
-//           int yt = int(point3D.z * float(resultResize));
-//           if (xt >= 0 && xt <= resultm_width && yt >= 0 && yt <= resultm_height){
-//             if (labelName == "blue")
-//               cv::circle(result, cv::Point (xt,yt), 5, cv::Scalar (255,0,0), -1);
-//             else if (labelName == "yellow")
-//               cv::circle(result, cv::Point (xt,yt), 5, cv::Scalar (0,255,255), -1);
-//             else if (labelName == "orange")
-//               cv::circle(result, cv::Point (xt,yt), 5, cv::Scalar (0,165,255), -1);
-//             else if (labelName == "big orange")
-//               cv::circle(result, cv::Point (xt,yt), 10, cv::Scalar (0,0,255), -1);
-//           }
+          int xt = int(point3D.x * float(resultResize) + resultm_width/2);
+          int yt = int(point3D.z * float(resultResize));
+          if (xt >= 0 && xt <= resultm_width && yt >= 0 && yt <= resultm_height){
+            if (labelName == "blue")
+              cv::circle(result, cv::Point (xt,yt), 5, cv::Scalar (255,0,0), -1);
+            else if (labelName == "yellow")
+              cv::circle(result, cv::Point (xt,yt), 5, cv::Scalar (0,255,255), -1);
+            else if (labelName == "orange")
+              cv::circle(result, cv::Point (xt,yt), 5, cv::Scalar (0,165,255), -1);
+            else if (labelName == "big orange")
+              cv::circle(result, cv::Point (xt,yt), 10, cv::Scalar (0,0,255), -1);
+          }
 
-//           std::cout << position << " " << labelName << " " << point3D << " " << maxProb << std::endl;
-//           savefile << std::to_string(position.x)+","+std::to_string(position.y)+","+labelName+","+std::to_string(point3D.x)+","+std::to_string(point3D.y)+","+std::to_string(point3D.z)+"\n";
-//         }
-//       }
-//     }
-//   }
+          std::cout << position << " " << labelName << " " << point3D << " " << maxProb << std::endl;
+        }
+      }
+    }
+  }
       
 
-//   for(size_t i = 0; i < keypoints.size(); i++){
-//     cv::circle(img, cv::Point(keypoints[i].pt.x,keypoints[i].pt.y+rowT), 2, cv::Scalar (255,255,255), -1);
-//   }
+  for(size_t i = 0; i < keypoints.size(); i++){
+    cv::circle(img, cv::Point(int(keypoints[i].pt.x),int(keypoints[i].pt.y)+rowT), 2, cv::Scalar (255,255,255), -1);
+  }
 
-//   cv::line(img, cv::Point(0,rowT), cv::Point(m_width,rowT), cv::Scalar(0,0,255), 2);
-//   cv::line(img, cv::Point(0,rowB), cv::Point(m_width,rowB), cv::Scalar(0,0,255), 2);
+  cv::line(img, cv::Point(0,rowT), cv::Point(m_width,rowT), cv::Scalar(0,0,255), 2);
+  cv::line(img, cv::Point(0,rowB), cv::Point(m_width,rowB), cv::Scalar(0,0,255), 2);
 
-//   // int resultm_width = 672;
-//   // int resultm_height = 600;
-//   // double resultResize = 30;
-//   // cv::Mat result[2] = cv::Mat::zeros(resultm_height, resultm_width, CV_8UC3), coResult;
-//   // std::string labels[] = {"background", "blue", "yellow", "orange", "big orange"};
-//   // if(inputs.size()>0){
-//   //   auto prob = m_slidingWindow.predict(inputs);
-//   //   for(size_t i = 0; i < inputs.size(); i++){
-//   //     size_t maxIndex = 1;
-//   //     double maxProb = prob[i][0][1];
-//   //     for(size_t j = 2; j < 5; j++){
-//   //       if(prob[i][0][j] > maxProb){
-//   //         maxIndex = j;
-//   //         maxProb = prob[i][0][j];
-//   //       }
-//   //     }
-//   //     // outputs[verifiedIndex[i]] = maxIndex;
-//   //     int x = candidates[i].x;
-//   //     int y = candidates[i].y;
-//   //     cv::Point position(x*2, y*2+180);
-//   //     cv::Point3f point3D = XYZ.at<cv::Point3f>(position);
-//   //     std::string labelName = labels[maxIndex];     
+  // int resultm_width = 672;
+  // int resultm_height = 600;
+  // double resultResize = 30;
+  // cv::Mat result[2] = cv::Mat::zeros(resultm_height, resultm_width, CV_8UC3), coResult;
+  // std::string labels[] = {"background", "blue", "yellow", "orange", "big orange"};
+  // if(inputs.size()>0){
+  //   auto prob = m_slidingWindow.predict(inputs);
+  //   for(size_t i = 0; i < inputs.size(); i++){
+  //     size_t maxIndex = 1;
+  //     double maxProb = prob[i][0][1];
+  //     for(size_t j = 2; j < 5; j++){
+  //       if(prob[i][0][j] > maxProb){
+  //         maxIndex = j;
+  //         maxProb = prob[i][0][j];
+  //       }
+  //     }
+  //     // outputs[verifiedIndex[i]] = maxIndex;
+  //     int x = candidates[i].x;
+  //     int y = candidates[i].y;
+  //     cv::Point position(x*2, y*2+180);
+  //     cv::Point3f point3D = XYZ.at<cv::Point3f>(position);
+  //     std::string labelName = labels[maxIndex];     
 
-//   //     if (labelName == "background"){
-//   //       std::cout << "No cone detected" << std::endl;
-//   //       cv::circle(img, position, 2, cv::Scalar (0,0,0), -1);
-//   //     } 
-//   //     else{
-//   //       // std::cout << "Find one " << labelName << " cone"<< std::endl;
-//   //       if (labelName == "blue")
-//   //         cv::circle(img, position, 2, cv::Scalar (175,238,238), -1);
-//   //       else if (labelName == "yellow")
-//   //         cv::circle(img, position, 2, cv::Scalar (0,255,255), -1);
-//   //       else if (labelName == "orange")
-//   //         cv::circle(img, position, 2, cv::Scalar (0,165,255), -1);
-//   //       else if (labelName == "big orange")
-//   //         cv::circle(img, position, 4, cv::Scalar (0,0,255), -1);
+  //     if (labelName == "background"){
+  //       std::cout << "No cone detected" << std::endl;
+  //       cv::circle(img, position, 2, cv::Scalar (0,0,0), -1);
+  //     } 
+  //     else{
+  //       // std::cout << "Find one " << labelName << " cone"<< std::endl;
+  //       if (labelName == "blue")
+  //         cv::circle(img, position, 2, cv::Scalar (175,238,238), -1);
+  //       else if (labelName == "yellow")
+  //         cv::circle(img, position, 2, cv::Scalar (0,255,255), -1);
+  //       else if (labelName == "orange")
+  //         cv::circle(img, position, 2, cv::Scalar (0,165,255), -1);
+  //       else if (labelName == "big orange")
+  //         cv::circle(img, position, 4, cv::Scalar (0,0,255), -1);
 
-//   //       int xt = int(point3D.x * float(resultResize) + resultm_width/2);
-//   //       int yt = int((point3D.z-1.872f) * float(resultResize));
-//   //       if (xt >= 0 && xt <= resultm_width && yt >= 0 && yt <= resultm_height){
-//   //         if (labelName == "blue")
-//   //           cv::circle(result[0], cv::Point (xt,yt), 5, cv::Scalar (255,0,0), -1);
-//   //         else if (labelName == "yellow")
-//   //           cv::circle(result[0], cv::Point (xt,yt), 5, cv::Scalar (0,255,255), -1);
-//   //         else if (labelName == "orange")
-//   //           cv::circle(result[0], cv::Point (xt,yt), 5, cv::Scalar (0,165,255), -1);
-//   //         else if (labelName == "big orange")
-//   //           cv::circle(result[0], cv::Point (xt,yt), 10, cv::Scalar (0,0,255), -1);
-//   //       }
+  //       int xt = int(point3D.x * float(resultResize) + resultm_width/2);
+  //       int yt = int((point3D.z-1.872f) * float(resultResize));
+  //       if (xt >= 0 && xt <= resultm_width && yt >= 0 && yt <= resultm_height){
+  //         if (labelName == "blue")
+  //           cv::circle(result[0], cv::Point (xt,yt), 5, cv::Scalar (255,0,0), -1);
+  //         else if (labelName == "yellow")
+  //           cv::circle(result[0], cv::Point (xt,yt), 5, cv::Scalar (0,255,255), -1);
+  //         else if (labelName == "orange")
+  //           cv::circle(result[0], cv::Point (xt,yt), 5, cv::Scalar (0,165,255), -1);
+  //         else if (labelName == "big orange")
+  //           cv::circle(result[0], cv::Point (xt,yt), 10, cv::Scalar (0,0,255), -1);
+  //       }
 
-//   //       std::cout << position << " " << labelName << " " << point3D << std::endl;
-//   //       savefile << std::to_string(position.x)+","+std::to_string(position.y)+","+labelName+","+std::to_string(point3D.x)+","+std::to_string(point3D.y)+","+std::to_string(point3D.z)+"\n";
-//   //     }
-//   //   }
-//   // }
+  //       std::cout << position << " " << labelName << " " << point3D << std::endl;
+  //       savefile << std::to_string(position.x)+","+std::to_string(position.y)+","+labelName+","+std::to_string(point3D.x)+","+std::to_string(point3D.y)+","+std::to_string(point3D.z)+"\n";
+  //     }
+  //   }
+  // }
 
-//   // int resultm_width = m_height;
-//   // int resultm_height = m_height;
-//   // double resultResize = 20;
-//   // cv::Mat result = cv::Mat::zeros(resultm_height, resultm_width, CV_8UC3);
-//   // for(size_t i = 0; i < m_finalPointCloud.cols(); i++){
-//   //   savefile << std::to_string(m_finalPointCloud(0,i))+","+std::to_string(m_finalPointCloud(1,i))+","+std::to_string(m_finalPointCloud(2,i))+"\n";
-//   //   int x = int(m_finalPointCloud(0,i) * resultResize + resultm_width/2);
-//   //   int y = int(m_finalPointCloud(1,i) * resultResize);
-//   //   if (x >= 0 && x <= resultm_width && y >= 0 && y <= resultm_height){
-//   //     cv::circle(result[0], cv::Point (x,y), 5, cv::Scalar (255, 255, 255), -1);
-//   //   }
-//   // }
+  // int resultm_width = m_height;
+  // int resultm_height = m_height;
+  // double resultResize = 20;
+  // cv::Mat result = cv::Mat::zeros(resultm_height, resultm_width, CV_8UC3);
+  // for(size_t i = 0; i < m_finalPointCloud.cols(); i++){
+  //   savefile << std::to_string(m_finalPointCloud(0,i))+","+std::to_string(m_finalPointCloud(1,i))+","+std::to_string(m_finalPointCloud(2,i))+"\n";
+  //   int x = int(m_finalPointCloud(0,i) * resultResize + resultm_width/2);
+  //   int y = int(m_finalPointCloud(1,i) * resultResize);
+  //   if (x >= 0 && x <= resultm_width && y >= 0 && y <= resultm_height){
+  //     cv::circle(result[0], cv::Point (x,y), 5, cv::Scalar (255, 255, 255), -1);
+  //   }
+  // }
 
-//   // cv::circle(result[0], cv::Point (int(resultm_width/2),0), 5, cv::Scalar (0, 0, 255), -1);
-//   cv::flip(result, result, 0);
-//   // img.copyTo(result[1].rowRange(resultm_height-376,resultm_height));
-//   // cv::hconcat(result[1], result[0], coResult);
+  // cv::circle(result[0], cv::Point (int(resultm_width/2),0), 5, cv::Scalar (0, 0, 255), -1);
+  cv::flip(result, result, 0);
+  // img.copyTo(result[1].rowRange(resultm_height-376,resultm_height));
+  // cv::hconcat(result[1], result[0], coResult);
 
-//   // cv::Mat coResult;
-//   // cv::hconcat(img, result, coResult);
-//   // cv::namedWindow("disp", cv::WINDOW_NORMAL);
-//   // cv::imshow("disp", coResult);
-//   // cv::waitKey(0);
-//   // cv::waitKey(0);
+  // cv::Mat coResult;
+  // cv::hconcat(img, result, coResult);
+  // cv::namedWindow("disp", cv::WINDOW_NORMAL);
+  // cv::imshow("disp", coResult);
+  // cv::waitKey(0);
+  // cv::waitKey(0);
 
-//   cv::imwrite(imgPath.substr(0,index-7)+"/results/"+filename.substr(0,index2)+".png", img);
+  // savePath = imgPath.substr(0,index-7)+"/results/"+filename.substr(0,index2)+".png";
+  // cv::imwrite(savePath, img);
 
-//   // savePath = imgPath.substr(0,index-7)+"/results/"+filename.substr(0,index2)+".png";
-//   // cv::imwrite(savePath, img);
+  // savePath = imgPath.substr(0,index-7)+"/disp_filtered/"+filename.substr(0,index2)+".png";
+  // std::cout<<savePath<<std::endl;
+  // cv::imwrite(savePath, disp);
 
-//   // savePath = imgPath.substr(0,index-7)+"/disp_filtered/"+filename.substr(0,index2)+".png";
-//   // std::cout<<savePath<<std::endl;
-//   // cv::imwrite(savePath, disp);
+  cv::namedWindow("img", cv::WINDOW_NORMAL);
+  cv::setWindowProperty("img", cv::WND_PROP_FULLSCREEN , cv::WINDOW_FULLSCREEN ); 
+  cv::imshow("img", img);
+  // cv::namedWindow("disp", cv::WINDOW_NORMAL);
+  // cv::imshow("disp", disp);
+  cv::waitKey(30);
+  // cv::destroyAllWindows();
 
-//   cv::namedWindow("img", cv::WINDOW_NORMAL);
-//   cv::setWindowProperty("img", cv::WND_PROP_FULLSCREEN , cv::WINDOW_FULLSCREEN ); 
-//   cv::imshow("img", img);
-//   // cv::namedWindow("disp", cv::WINDOW_NORMAL);
-//   // cv::imshow("disp", disp);
-//   cv::waitKey(30);
-//   // cv::destroyAllWindows();
-
-//   // for(size_t i = 0; i < pts.size(); i++)
-//   //   std::cout << i << ": " << outputs[i] << std::endl;
-// }
+  // for(size_t i = 0; i < pts.size(); i++)
+  //   std::cout << i << ": " << outputs[i] << std::endl;
+}
 
 // void DetectCone::backwardDetection(cv::Mat img, std::vector<cv::Point3f> pts, std::vector<int>& outputs){
 //   //Given RoI in 3D world, project back to the camera frame and then detect
-//   float_t threshold = 0.7;
+//   double threshold = 0.7;
 //   cv::Mat disp, Q, rectified, XYZ;
 //   reconstruction(img, Q, disp, rectified, XYZ);
 //   std::vector<tiny_dnn::tensor_t> inputs;

@@ -13,41 +13,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-FROM alpine:edge AS builder
-MAINTAINER Björnborg Nguyen "bjornborg.nguyen@chalmers.se"
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+# Part to build opendlv-perception-vision-orbslam2. 
+FROM alpine:edge as builder
+MAINTAINER Christian Berger "christian.berger@gu.se"
+#Get OS stuff
+RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 RUN apk update && \
     apk --no-cache add \
-        mercurial \
-        ca-certificates \
-        bash \
         cmake \
+        #bash \
         g++ \
-        git \
         make \
+        gdb \
+        valgrind \
         upx \
-        ccache \
-        gfortran \
-        openblas-dev \
-        icu \
-        opencv-dev \
-        opencv-libs \
-        libtbb-dev \
-        libtbb \
-        opencv
+        git \
+        mercurial \
+        opencv-dev@testing
 
 WORKDIR /tmp
 
 ADD . /tmp/sources
 
-RUN git clone https://github.com/justusc/FindTBB.git && \
-   cp FindTBB/FindTBB.cmake /usr/share/cmake/Modules/ && \
-   cd FindTBB && \
-   ./test.sh
+#RUN git clone https://github.com/justusc/FindTBB.git && \
+#   cp FindTBB/FindTBB.cmake /usr/share/cmake/Modules/ && \
+#   cd FindTBB && \
+#   ./test.sh
 
 RUN git clone https://github.com/tiny-dnn/tiny-dnn.git && \
   mkdir -p tiny-dnn/build && \
-  cp sources/config.h tiny-dnn/tiny_dnn/config.h && \
+#  cp sources/config.h tiny-dnn/tiny_dnn/config.h && \
   cd tiny-dnn/build && \
   cmake .. && \
   make install
@@ -66,9 +61,9 @@ RUN cd sources && \
     cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/cfsd18-perception-detectcone-dest .. && \
     make -j3 && make test && make install && upx -9 /tmp/cfsd18-perception-detectcone-dest/bin/cfsd18-perception-detectcone
 
-# # # Part to deploy beaglebone.
+# Part to deploy opendlv-perception-vision-orbslam2
 FROM alpine:edge
-MAINTAINER Björnborg Nguyen "bjornborg.nguyen@chalmers.se"
+MAINTAINER Christian Berger "christian.berger@gu.se"
 
 #Start microservice
 WORKDIR /usr/bin
@@ -77,5 +72,3 @@ COPY --from=builder /usr/local/lib/ /usr/lib/
 COPY --from=builder /usr/lib/ /usr/lib/
 COPY --from=builder /tmp/cfsd18-perception-detectcone-dest/bin/cfsd18-perception-detectcone .
 CMD ["/usr/bin/cfsd18-perception-detectcone"]
-
-
