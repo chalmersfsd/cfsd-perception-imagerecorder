@@ -119,6 +119,11 @@ include_directories(SYSTEM ${LIBRT_INCLUDE_DIR})
 # Link libs
 #set(LIBRARIES Threads::Threads opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d rt libgio-2.0)
 
+include_directories(SYSTEM /usr/include)
+include_directories(SYSTEM /usr/local/include)
+link_directories(SYSTEM /usr/lib) #Access g2o
+link_directories(SYSTEM /usr/local/lib) #Access g2o
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_library(${PROJECT_NAME}-core STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/detectcone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/cone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/point.cpp ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)

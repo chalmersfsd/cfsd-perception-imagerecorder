@@ -27,11 +27,10 @@ RUN apk update && \
         upx \
         git \
         mercurial \
+        libmount \
         opencv-dev@testing
 
 WORKDIR /tmp
-
-ADD . /tmp/sources
 
 #RUN git clone https://github.com/justusc/FindTBB.git && \
 #   cp FindTBB/FindTBB.cmake /usr/share/cmake/Modules/ && \
@@ -54,10 +53,11 @@ RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/re
 RUN apk update && \
     apk --no-cache add \
 opencv@testing
+
 #install Microservice
-RUN cd sources && \
-    rm -rf build && \
-    mkdir build && \
+ADD . /opt/sources
+WORKDIR /opt/sources
+RUN mkdir -p build && \
     cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/cfsd18-perception-detectcone-dest .. && \
     make -j3 && make test && make install && upx -9 /tmp/cfsd18-perception-detectcone-dest/bin/cfsd18-perception-detectcone
@@ -72,4 +72,5 @@ COPY --from=builder /usr/local/include/ /usr/include/
 COPY --from=builder /usr/local/lib/ /usr/lib/
 COPY --from=builder /usr/lib/ /usr/lib/
 COPY --from=builder /tmp/cfsd18-perception-detectcone-dest/bin/cfsd18-perception-detectcone .
+RUN apk update && apk add glib
 CMD ["/usr/bin/cfsd18-perception-detectcone"]
