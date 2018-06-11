@@ -32,23 +32,6 @@ RUN apk update && \
 
 WORKDIR /tmp
 
-#RUN git clone https://github.com/justusc/FindTBB.git && \
-#   cp FindTBB/FindTBB.cmake /usr/share/cmake/Modules/ && \
-#   cd FindTBB && \
-#   ./test.sh
-
-RUN git clone https://github.com/tiny-dnn/tiny-dnn.git && \
-  mkdir -p tiny-dnn/build && \
-#  cp sources/config.h tiny-dnn/tiny_dnn/config.h && \
-  cd tiny-dnn/build && \
-  cmake .. && \
-  make install
-
-RUN git clone https://github.com/eigenteam/eigen-git-mirror.git && \
-   mkdir -p eigen-git-mirror/build && \
-   cd eigen-git-mirror/build && \
-   cmake .. && \
-   make install
 RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 RUN apk update && \
     apk --no-cache add \
@@ -59,8 +42,8 @@ ADD . /opt/sources
 WORKDIR /opt/sources
 RUN mkdir -p build && \
     cd build && \
-    cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/cfsd18-perception-detectcone-dest .. && \
-    make -j3 && make test && make install && upx -9 /tmp/cfsd18-perception-detectcone-dest/bin/cfsd18-perception-detectcone
+    cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp/cfsd18-perception-imagerecorder-dest .. && \
+    make -j3 && make test && make install && upx -9 /tmp/cfsd18-perception-imagerecorder-dest/bin/cfsd18-perception-imagerecorder
 
 # Part to deploy opendlv-perception-vision-orbslam2
 FROM alpine:edge
@@ -68,9 +51,8 @@ MAINTAINER Christian Berger "christian.berger@gu.se"
 
 #Start microservice
 WORKDIR /usr/bin
-COPY --from=builder /usr/local/include/ /usr/include/
 COPY --from=builder /usr/local/lib/ /usr/lib/
 COPY --from=builder /usr/lib/ /usr/lib/
-COPY --from=builder /tmp/cfsd18-perception-detectcone-dest/bin/cfsd18-perception-detectcone .
+COPY --from=builder /tmp/cfsd18-perception-imagerecorder-dest/bin/cfsd18-perception-imagerecorder .
 RUN apk update && apk add glib
-CMD ["/usr/bin/cfsd18-perception-detectcone"]
+CMD ["/usr/bin/cfsd18-perception-imagerecorder"]

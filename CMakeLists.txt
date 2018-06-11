@@ -15,12 +15,12 @@
 
 cmake_minimum_required(VERSION 3.2)
 
-project(cfsd18-perception-detectcone)
+project(cfsd18-perception-imagerecorder)
 
 ################################################################################
 # Defining the relevant versions of OpenDLV Standard Message Set and libcluon.
 set(OPENDLV_STANDARD_MESSAGE_SET opendlv-standard-message-set-v0.9.1.odvd)
-set(CLUON_COMPLETE cluon-complete-v0.0.77.hpp)
+set(CLUON_COMPLETE cluon-complete-v0.0.99.hpp)
 
 ################################################################################
 # This project requires C++14 or newer.
@@ -84,11 +84,6 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 
-################################################################################
-# Eigen
-find_package(Eigen3 REQUIRED NO_MODULE)
-include_directories(${Eigen3_INCLUDE_DIRS})
-
 ###############################################################################
 # OpenMP
 OPTION (USE_OpenMP "Use OpenMP" ON)
@@ -100,15 +95,6 @@ IF(USE_OpenMP)
   ENDIF()
 ENDIF()
 
-###############################################################################
-#TinyDnn
-find_package(TinyDNN REQUIRED)
-
-###############################################################################
-#TBB
-#find_package(TBB REQUIRED)
-#include_directories(${TBB_INCLUDE_DIRS})
-#add_definitions(${TBB_DEFINITIONS})
 
 SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -119,21 +105,16 @@ include_directories(SYSTEM ${LIBRT_INCLUDE_DIR})
 # Link libs
 #set(LIBRARIES Threads::Threads opencv_core opencv_imgcodecs opencv_features2d opencv_imgproc opencv_highgui opencv_calib3d rt libgio-2.0)
 
-include_directories(SYSTEM /usr/include)
-include_directories(SYSTEM /usr/local/include)
 link_directories(SYSTEM /usr/lib) #Access g2o
 link_directories(SYSTEM /usr/local/lib) #Access g2o
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-add_library(${PROJECT_NAME}-core STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/detectcone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/cone.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/point.cpp ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
+add_library(${PROJECT_NAME}-core ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.cpp)
 
 # Add custom libs h
-set(LIBRARIES ${LIBRARIES} Threads::Threads ${OpenCV_LIBS} ${Eigen3_LIBS} ${TinyDNN_LIBS} rt) 
+set(LIBRARIES ${LIBRARIES} Threads::Threads ${OpenCV_LIBS} rt) 
 
-MESSAGE(STATUS "heej")
-MESSAGE(STATUS ${LIBRARIES})
-#${TBB_LIBRARIES}
 
 ################################################################################
 # Create executable.
@@ -143,7 +124,7 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}-core ${LIBRARIES}) #Links 
 ################################################################################
 # Enable unit testing.
 enable_testing()
-add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-cfsd18-perception-detectcone.cpp)
+add_executable(${PROJECT_NAME}-runner ${CMAKE_CURRENT_SOURCE_DIR}/test/tests-cfsd18-perception-imagerecorder.cpp)
 target_link_libraries(${PROJECT_NAME}-runner ${LIBRARIES}  ${PROJECT_NAME}-core)
 add_test(NAME ${PROJECT_NAME}-runner COMMAND ${PROJECT_NAME}-runner)
 

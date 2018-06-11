@@ -14,8 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <iostream>
+#include <memory>
+#include <vector>
+#include <cmath>
+#include <thread>
+#include <cstdint>
+#include <tuple>
+#include <utility>
+#include <string>
+#include <sstream>
 
-#include "detectcone.hpp"
+#include "cluon-complete.hpp"
+#include "opendlv-standard-message-set.hpp"
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 
 int32_t main(int32_t argc, char **argv) {
   int32_t retCode{0};
@@ -44,7 +62,6 @@ int32_t main(int32_t argc, char **argv) {
     // od4.dataTrigger(opendlv::logic::perception::ObjectDistance::ID(),envelopeRecieved);
 
     // // Just sleep as this microservice is data driven.
-    // using namespace std::literals::chrono_literals;
     // while (od4.isRunning()) {
     //   std::this_thread::sleep_for(1s);
     //   std::chrono::system_clock::time_point tp;
@@ -53,6 +70,7 @@ int32_t main(int32_t argc, char **argv) {
 
 
 
+    using namespace std::literals::chrono_literals;
     const uint32_t WIDTH{static_cast<uint32_t>(std::stoi(commandlineArguments["width"]))};
     const uint32_t HEIGHT{static_cast<uint32_t>(std::stoi(commandlineArguments["height"]))};
     const uint32_t BPP{static_cast<uint32_t>(std::stoi(commandlineArguments["bpp"]))};
@@ -64,16 +82,20 @@ int32_t main(int32_t argc, char **argv) {
         const uint32_t SIZE{WIDTH * HEIGHT * BPP/8};
         const std::string NAME{(commandlineArguments["name"].size() != 0) ? commandlineArguments["name"] : "/cam0"};
         const uint32_t ID{(commandlineArguments["id"].size() != 0) ? static_cast<uint32_t>(std::stoi(commandlineArguments["id"])) : 0};
-        const bool VERBOSE{commandlineArguments.count("verbose") != 0};
+        //const bool VERBOSE{commandlineArguments.count("verbose") != 0};
 
         (void)ID;
         (void)SIZE;
-        std::cout << "Making slammer" << VERBOSE << std::endl;
-        DetectCone detectcone(commandlineArguments, od4);
+
+         std::string filepathTimestamp;
+         filepathTimestamp = "/opt/timestamp/timestamps.txt";
+         std::ofstream f;
+         f.open(filepathTimestamp.c_str());
+
         // Interface to a running OpenDaVINCI session (ignoring any incoming Envelopes).
         // cluon::OD4Session od4{static_cast<uint16_t>(std::stoi(commandlineArguments["cid"]))};
         size_t frameCounter = 0;
-        
+        std::string imgPath = "/opt/images/";
         std::unique_ptr<cluon::SharedMemory> sharedMemory(new cluon::SharedMemory{NAME});
         if (sharedMemory && sharedMemory->valid()) {
             std::clog << argv[0] << ": Found shared memory '" << sharedMemory->name() << "' (" << sharedMemory->size() << " bytes)." << std::endl;
@@ -98,13 +120,20 @@ int32_t main(int32_t argc, char **argv) {
                 image->imageData = sharedMemory->data();
                 image->imageDataOrigin = image->imageData;
                 cv::Mat img = cv::cvarrToMat(image); 
-                
+                 cluon::data::TimeStamp imgTimestamp = cluon::time::now();
+
+                int64_t ts = cluon::time::toMicroseconds(imgTimestamp);
+
+                f << std::setprecision(19) << ts << std::endl;
+                std::string saveString = imgPath + std::to_string(frameCounter) + ".png";
+                cv::imwrite( saveString, img);
+
+                std::cout << "Saved image: " << frameCounter << std::endl;
                 sharedMemory->unlock();
                 cv::waitKey(1);
-                detectcone.forwardDetectionORB(img);
                 frameCounter++;
             }
-
+            f.close();
             cvReleaseImageHeader(&image);
         }
         else {
@@ -113,6 +142,8 @@ int32_t main(int32_t argc, char **argv) {
       }
 
   }
+
+  
   return retCode;
 }
 
